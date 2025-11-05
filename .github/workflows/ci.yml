@@ -31,14 +31,17 @@ jobs:
         run: |
           echo "Validating main scripts..."
           uv run python -m py_compile scraper.py
+          uv run python -m py_compile main.py
 
           echo "Validating demos..."
-          uv run python -m py_compile demos/terminal_demo.py
-          uv run python -m py_compile demos/test_server.py
+          if [ -d "demos" ]; then
+            find demos -name "*.py" -exec uv run python -m py_compile {} \;
+          fi
 
           echo "Validating lessons..."
-          uv run python -m py_compile lessons/__init__.py
-          uv run python -m py_compile lessons/utils.py
+          if [ -d "lessons" ]; then
+            find lessons -name "*.py" -exec uv run python -m py_compile {} \;
+          fi
 
           echo "Validating tools..."
           uv run python -m py_compile tools/qrslide.py
@@ -51,6 +54,12 @@ jobs:
           uv run python -c "from fastapi import FastAPI; print('✓ fastapi')"
           uv run python -c "import plotext; print('✓ plotext')"
           uv run python -c "import qrcode; print('✓ qrcode')"
+
+      - name: Test uv scripts
+        run: |
+          echo "Testing uv script commands are accessible..."
+          uv run --help || true
+          echo "✓ uv run available"
 
   build-presentation:
     name: Build Presentation

@@ -20,3 +20,12 @@ dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
 ]
+
+[tool.setuptools]
+# Explicit package configuration to avoid build errors
+py-modules = ["main", "scraper"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tools*", "demos*", "lessons*"]
+exclude = ["talk*", "slides*", "node_modules*"]
