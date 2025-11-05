@@ -39,25 +39,36 @@ npm install
 
 ## Running the Demo
 
-The demo scrapes Hacker News stories and comments to show performance differences:
+The demo scrapes Hacker News stories and comments to show performance differences.
 
-### 1. Single-threaded (baseline)
-```bash
-uv run python scraper.py
-```
-Expected: ~12 stories/sec on a 12-core CPU
+### Quick Commands (Recommended)
 
-### 2. Multi-threaded with GIL
-```bash
-uv run python scraper.py --multithreaded
-```
-Expected: ~35 stories/sec (3x improvement)
+You can run demos using **Make** (most universal), **Just** (modern alternative), or **direct Python**:
 
-### 3. Multi-threaded GIL-free 🚀
 ```bash
-uv run python -X gil=0 scraper.py --multithreaded
+# Single-threaded (baseline) - ~12 stories/sec
+make demo-single
+# or: just demo-single
+# or: uv run python scraper.py
+
+# Multi-threaded with GIL - ~35 stories/sec (3x speedup)
+make demo-multi
+# or: just demo-multi
+# or: uv run python scraper.py --multithreaded
+
+# Multi-threaded GIL-free - ~80 stories/sec (7x speedup!)
+make demo-nogil
+# or: just demo-nogil
+# or: uv run python -X gil=0 scraper.py --multithreaded
+
+# Run all three demos in sequence for comparison
+make demo-all
+# or: just demo-all
 ```
-Expected: ~80 stories/sec (7x improvement!)
+
+> 📘 **See [DEMO_COMMANDS.md](DEMO_COMMANDS.md)** for detailed documentation on all available commands and presentation tools.
+>
+> **Note:** `just` requires installation from [https://just.systems/](https://just.systems/). `make` is pre-installed on most systems.
 
 ## Interactive Learning & Demos 🎨
 
@@ -218,9 +229,39 @@ Python 3.13+ introduced an experimental free-threading mode (PEP 703) that remov
 
 Enable it with: `python -X gil=0`
 
-## Tools
+## Presentation Tools
 
-- `tools/qrslide.py` - Generate QR codes for sharing talk materials
+### Generate QR Code for Repository
+
+Create a QR code for sharing the repository during talks:
+
+```bash
+make qr-repo
+# or: just qr-repo
+```
+
+This generates `talk/repo-qr.svg` that you can embed in your slides.
+
+## Available Commands
+
+The following commands are available via Make, Just, or direct Python invocation:
+
+| Make Command | Just Command | Description |
+|--------------|--------------|-------------|
+| `make demo-single` | `just demo-single` | Single-threaded scraping (baseline) |
+| `make demo-multi` | `just demo-multi` | Multi-threaded with GIL |
+| `make demo-nogil` | `just demo-nogil` | Multi-threaded GIL-free (Python 3.14) |
+| `make demo-all` | `just demo-all` | Run all demos sequentially |
+| `make qr-repo` | `just qr-repo` | Generate QR code for repository |
+| `make test` | `just test` | Run tests |
+| `make clean` | `just clean` | Clean temporary files |
+
+Additional Just commands:
+- `just build-html` - Build HTML presentation
+- `just build-pdf` - Build PDF presentation
+- `just check-python` - Check Python version and GIL status
+
+See [DEMO_COMMANDS.md](DEMO_COMMANDS.md) for complete documentation.
 
 ## Contributing
 

@@ -1,0 +1,61 @@
+name: Demo Scraper Performance
+
+on:
+  workflow_dispatch:
+    inputs:
+      pages:
+        description: 'Number of pages to scrape (default: 10 for CI)'
+        required: false
+        default: '10'
+        type: string
+
+jobs:
+  benchmark-scraper:
+    name: Benchmark Web Scraping
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.14
+        run: uv python install 3.14
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Check Python GIL status
+        run: |
+          uv run python --version
+          uv run python -VV
+          uv run python -c "import sys; print('GIL enabled by default:', not hasattr(sys, '_is_gil_enabled') or sys._is_gil_enabled())"
+
+      - name: Run single-threaded demo
+        run: |
+          echo "=== Running Single-threaded Demo ==="
+          uv run demo-single
+        continue-on-error: true
+
+      - name: Run multi-threaded demo (with GIL)
+        run: |
+          echo "=== Running Multi-threaded Demo (with GIL) ==="
+          uv run demo-multi
+        continue-on-error: true
+
+      - name: Run multi-threaded demo (GIL-free)
+        run: |
+          echo "=== Running Multi-threaded Demo (GIL-free) ==="
+          uv run demo-nogil
+        continue-on-error: true
+
+      - name: Summary
+        run: |
+          echo "✅ Demo runs completed!"
+          echo ""
+          echo "Note: Performance results may vary in CI environment"
+          echo "For best results, run demos locally on a multi-core machine"
