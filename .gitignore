@@ -1,5 +1,28 @@
+# Python
 .DS_Store
 .idea/
 venv/
 .venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Build outputs
+talk/presentation.html
+talk/presentation.pdf
+dist/
+build/
+
+# Environment
+.env
+.env.local
 

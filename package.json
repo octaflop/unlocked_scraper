@@ -1,0 +1,25 @@
+{
+  "name": "unlocked-scraper",
+  "version": "0.1.0",
+  "description": "Web scraping demo showcasing async and GIL-free Python 3.14 performance",
+  "scripts": {
+    "build:html": "marp talk/presentation.md --html --allow-local-files -o talk/presentation.html",
+    "build:pdf": "marp talk/presentation.md --html --allow-local-files --pdf -o talk/presentation.pdf",
+    "build": "npm run build:html && npm run build:pdf",
+    "watch": "marp talk/presentation.md --html --allow-local-files -w --server",
+    "preview": "marp talk/presentation.md --html --allow-local-files --preview"
+  },
+  "keywords": [
+    "python",
+    "gil",
+    "free-threading",
+    "web-scraping",
+    "async",
+    "presentation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@marp-team/marp-cli": "^3.4.0"
+  }
+}

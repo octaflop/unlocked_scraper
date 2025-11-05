@@ -1,0 +1,149 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, gilfree]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lint-and-validate:
+    name: Lint & Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.14
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Validate Python syntax
+        run: |
+          echo "Validating main scripts..."
+          uv run python -m py_compile scraper.py
+
+          echo "Validating demos..."
+          uv run python -m py_compile demos/terminal_demo.py
+          uv run python -m py_compile demos/test_server.py
+
+          echo "Validating lessons..."
+          uv run python -m py_compile lessons/__init__.py
+          uv run python -m py_compile lessons/utils.py
+
+          echo "Validating tools..."
+          uv run python -m py_compile tools/qrslide.py
+
+      - name: Check dependencies
+        run: |
+          uv run python -c "import aiohttp; print('✓ aiohttp')"
+          uv run python -c "import bs4; print('✓ beautifulsoup4')"
+          uv run python -c "from rich.console import Console; print('✓ rich')"
+          uv run python -c "from fastapi import FastAPI; print('✓ fastapi')"
+          uv run python -c "import plotext; print('✓ plotext')"
+          uv run python -c "import qrcode; print('✓ qrcode')"
+
+  build-presentation:
+    name: Build Presentation
+    runs-on: ubuntu-latest
+    needs: lint-and-validate
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Marp CLI
+        run: npm install -g @marp-team/marp-cli@latest
+
+      - name: Build HTML presentation
+        run: |
+          marp talk/presentation.md \
+            --html \
+            --allow-local-files \
+            -o talk/presentation.html
+
+      - name: Build PDF presentation
+        run: |
+          marp talk/presentation.md \
+            --html \
+            --allow-local-files \
+            --pdf \
+            -o talk/presentation.pdf
+
+      - name: Upload HTML artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: presentation-html
+          path: talk/presentation.html
+          retention-days: 90
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: presentation-pdf
+          path: talk/presentation.pdf
+          retention-days: 90
+
+  deploy-pages:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: build-presentation
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download HTML artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: presentation-html
+          path: talk/
+
+      - name: Download PDF artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: presentation-pdf
+          path: talk/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./talk
+          publish_branch: gh-pages
+          keep_files: false
+
+  summary:
+    name: Summary
+    runs-on: ubuntu-latest
+    needs: [lint-and-validate, build-presentation]
+    if: always()
+
+    steps:
+      - name: Check job results
+        run: |
+          echo "🔍 Lint & Validate: ${{ needs.lint-and-validate.result }}"
+          echo "📊 Build Presentation: ${{ needs.build-presentation.result }}"
+
+          if [ "${{ needs.lint-and-validate.result }}" = "success" ] && [ "${{ needs.build-presentation.result }}" = "success" ]; then
+            echo "✅ All checks passed!"
+            exit 0
+          else
+            echo "❌ Some checks failed"
+            exit 1
+          fi
